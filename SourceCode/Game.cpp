@@ -24,7 +24,7 @@ class game_data // class containing game datas
 {
     int x, y, cx, cy, width, height; // position variables that will hold position
     // of player and game area
-public:
+public: 
     int gameover; // var to check the game is over or not
     void controller(); // function for getting player inputs to move the game object
     void update(); // function that will update game screen on each events in the game
