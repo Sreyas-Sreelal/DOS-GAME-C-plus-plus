@@ -18,24 +18,32 @@ char dir = '0'; //the variable holding the direction of in game object
 class game_data//class containing game datas
 {
  int x,y,cx,cy,width,height;//position variables that will hold position of player and game area
+
  public:
+
  int gameover;//var to check the game is over or not
+
  void controller();//function for getting player inputs to move the game object
  void update();//function that will update game screen on each events in the game
  void load_collectibles();//functions to load collectibles or pickups
  void move();//the function that moves game object according to controller()
+
  game_data()//constructor
  {
  /*Resetting vars to default*/
- width    = 20;
+ width    = 50;
  height   = 20;
  x        = width/2;
  y        = height/2;
- /*x and y will be half of width and height so to center the object*/
- cx       = (rand()%20)+1;
- cy       = (rand()%20)+1;
+
+ /*x and y will be half of width and height so that to center the object*/
+ cx       = (random(width-1)+1);
+ cy       = (random(height-1)+1);
+
  /*random coordinates for pickups*/
- gameover = 0;
+
+ gameover = 0;//game @ the begging will not be over
+
  }
 };
 
@@ -108,27 +116,28 @@ void game_data::controller()
 {
  if(kbhit())//gets key input
  {
-  switch(getch())
+  switch(getch())//using getch to indentify inputted key
   {
    /*Setting direction according to input*/
+
    case 'w':
-   dir = 'U';
+   dir = 'U';//Upward
    break;
 
    case 's':
-   dir = 'D';
+   dir = 'D';//Downward
    break;
 
    case 'a':
-   dir = 'L';
+   dir = 'L';//Left
    break;
 
    case 'd':
-   dir = 'R';
+   dir = 'R';//Right
    break;
    /*Key to close the game*/
    case 'x':
-   gameover = 1;
+   gameover = 1;//this will break the main loop
    break;
 
   }
@@ -186,13 +195,13 @@ void game_data::update()
    cout<<"";//player object
 
    else
-   if(i==0||i==20||j==0||j==20)//sets walls on borders
+   if(i==0||i==height||j==0||j==width)//sets walls on borders
    cout<<"#";//wall object
    else
    if(cy==i&&cx==j)//id reached pickups coordinates
    cout<<"*";//pickup object
    else
-   cout<<" ";//space on inside of the wall
+   cout<<" ";//space on inside of the game area
   }
   cout<<endl;
  }
@@ -202,20 +211,18 @@ void game_data::update()
 void game_data::load_collectibles()
 {
  /*Sets the random coordinates to pickups (min 0 max will be height-1 and width-1)*/
- cx = rand()%width;
- cy = rand()%height;
- if(cx==0||cy==0)//if the coords are in conflict with border (ie 0)
- load_collectibles();//overload the function
+ cx = random(width-1)+1;
+ cy = random(height-1)+1;
 }
 /*Global Functions*/
 
-void Login(player_data &);//to login the player
-void Register(player_data &);//to register new player
+void Login();//to login the player
+void Register();//to register new player
 void save();//save the details to database
 void connect();//connect to database and get all main objects of player class intialised with registerd player's details
 void Search_Name();//function to search by player name
 void Search_Score();//function to search by player score
-void menu(player_data &);//function handling menu
+void menu();//function handling menu
 void Top10();//function to sort the objects acording to their scoer and to display top 10 of them
 
 void save()
@@ -237,7 +244,6 @@ void connect()
 
  while(!file.eof())
  {
-
  file.read((char*)&s[i],sizeof(s[i]));//initialising player class objects with registered players
  if(file.eof())break;
  i++;
@@ -245,30 +251,29 @@ void connect()
   data_size = i;//setting the data size with no of player registered
   file.close();
 }
-void Register(player_data &pdata)
+void Register()
 {
  int i;
- pdata.input();
+ temp.input();
  int found = 0;//to check whether the name exists in the database
  for(i=0;i<data_size;i++)
  {
 
-  if(strcmp(s[i].getname(),pdata.getname())==0)//if the name exists
+  if(strcmp(s[i].getname(),temp.getname())==0)//if the name exists
    {
     found = 1;
     break;
    }
-  i++;
   }
  if(found)
  {
  cout<<"\nThis name exits you will be  now redirected to login section\n ";
  delay(2000);
- Login(pdata);//calling function login so as to redirect to login area
+ Login();//calling function login so as to redirect to login area
  }
  else//new account
  {
- s[data_size] = pdata;
+ s[data_size] = temp;
  pindex = data_size;
  data_size++;//incrementing no of registered players
  cout<<"\nYour Account registered successfully !!!\n";
@@ -277,24 +282,25 @@ void Register(player_data &pdata)
  }
 
 
-void Login(player_data &pdata)
+void Login()
 {
 
  int found=0/*same use as in register function*/,i=0;
- pdata.input();
+ temp.input();
  for(i=0;i<data_size;i++)
  {
- if(strcmp(pdata.getname(),s[i].getname())==0)//inputted name exists
+ if(strcmp(temp.getname(),s[i].getname())==0)//inputted name exists
  {
  found =1;
- if(s[i].checkpass(pdata.getpass())==0)//checking password
+ if(s[i].checkpass(temp.getpass())==0)//checking password
  {
  logined = 1;
- pdata = s[i];
+ temp = s[i];
  cout<<"\nYou logined succesfully!!\n";
  pindex = i;
  break;
  }
+
  else//if wrong password entered
  {
  cout<<"\nYou entered wrong password Enter it again \n";
@@ -307,21 +313,22 @@ void Login(player_data &pdata)
  {
  cout<<"\nThis account doesnt exists Please register \n";
  delay(100);
- Register(pdata);//calling Register function to redirect to register page
+ Register();//calling Register function to redirect to register page
  }
  else
  {
  if(!logined)//player not logined (incorrect password)
  {
  delay(100);
- Login(pdata);//calling login screen again
+ Login();//calling login screen again
  }
  }
  }
 
- void menu(player_data &temp)
+ void menu()
  {
  clrscr();
+
  int res/*to get response in the main menu*/,res2/*response in search menu*/;
  cout<<"\t\t\tASCII MAN  - A C++ GAME \n\t\t\t\t......\n\t\t\t\t......\n\t\t\t\t......\n\n\n";
  cout<<"\t\t|||||Main Menu||||||\n\n";
@@ -336,10 +343,10 @@ void Login(player_data &pdata)
  switch(res)
  {
  case 1:
- Login(temp);
+ Login();
  break;
  case 2:
- Register(temp);
+ Register();
  break;
  case 3:
  clrscr();
@@ -358,7 +365,7 @@ void Login(player_data &pdata)
  Search_Score();
  break;
  case 3:
- menu(temp);
+ menu();
  break;
  }
  break;
@@ -372,7 +379,7 @@ void Login(player_data &pdata)
  Dont hit the walls if you do so the game will get lose\n\
  10 score for collecting each pickup and your score will be saved always in your account ";
  getch();
- menu(temp);
+ menu();
  break;
  case 6:
  exit(0);
@@ -389,7 +396,7 @@ void Search_Score()
  cin>>tmp;
  for(int i=0;i<data_size;i++)
  {
- if(s[i].getscore()==tmp)
+ if(s[i].getscore() == tmp)
  s[i].display();
  }
  cout<<"\n\nPress y to search for more people or any other key to go back  \n ";
@@ -400,7 +407,7 @@ void Search_Score()
   Search_Score();
   break;
   default://any other letter
-  menu(temp);
+  menu();
   break;
  }
 }
@@ -425,7 +432,7 @@ void Search_Name()
   Search_Name();
   break;
   default:
-  menu(temp);
+  menu();
   break;
  }
 }
@@ -461,7 +468,7 @@ void Top10()
   }
  cout<<"\n\n\Press any key to go back ";
  getch();
- menu(temp);//going back to menu
+ menu();//going back to menu
 }
 
 
@@ -471,20 +478,25 @@ void main()
 
  clrscr();
 
+ randomize();
+
  /*Setting color to background and objects*/
+
  textbackground(WHITE);
  textcolor(BLACK);
 
  game_data game;//object holding game data from game_data class
  connect();//connect to database
- menu(temp);//display menu function
+ menu();//display menu function
 
  if(logined)//if the player logged in
  {
+
  s[pindex].load_score();//loading player current score and stats
+
  game.update();//setting up game backgrounds
 
- /*The functions controller move will be called continuosly till the game get overs
+ /*The functions controller and  move will be called continuosly till the game get overs
  as gameplay depends on these functions*/
 
  while(!game.gameover)
@@ -496,8 +508,11 @@ void main()
  }
  clrscr();
  cout<<"\t\t!!!! GAME OVER !!!!!\n";
- if(game.gameover)//checks the game is over
+
+
  s[pindex].save_score();//saves the score and stats of player
  save();//saves details to database
+
  getch();
+
 }
